@@ -1,0 +1,6 @@
+# Ignorera virtuell Python-miljö
+.venv/
+
+# Ignorera cachefiler från Python
+__pycache__/
+*.pyc
