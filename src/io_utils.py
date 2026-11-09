@@ -1,4 +1,3 @@
-# här tar vi fram funktion för att kunna läsa in csv-filen
 import pandas as pd
 
 # FUNKTION FÖR ATT LÄSA IN CSV-FIL
@@ -9,4 +8,4 @@ def load_data(file_path):  # Tar emot sökvägen till CSV-filen
     file_path (str): Sökvägen till CSV-filen.
     """
     df = pd.read_csv(file_path)  # Läser in CSV-filen till en DataFrame
-    return df  # Returnerar färdig DataFrame
+    return df  # Returnerar färdig DataFrames
