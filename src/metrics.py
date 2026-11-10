@@ -1,9 +1,10 @@
 import numpy as np
+import math
 
 
 # FUNKTION 1: BESKRIVANDE ANALYS AV NUMERISKA KOLUMNER
 
-def summary_statistics(df): # funktion som tar emot DataFrame
+def summary_statistics(df): # funktion tar emot DataFrame
     """Beräknar statistiska mått för utvalda numeriska kolumner"""
 
     columns = ["age", "weight", "height", "systolic_bp", "cholesterol"] # anger vilka kolumner som ska undersökas
@@ -21,7 +22,7 @@ def summary_statistics(df): # funktion som tar emot DataFrame
 
     return summary # returnerar sammanställningen som en DataFrame
 
-# FUNKTION 2: SIMULERING AV SJUKDOMSCASE
+# FUNKTION 2: SIMULERING AV SJUKDOM
 
 def simulation(df):
 
@@ -59,3 +60,30 @@ def simulation(df):
     print(f"Andel sjuka i simuleringen: {andel_simulerat_sjuka * 100:.2f}%")
 
     return
+
+# FUNKTION 3: FUNKTION FÖR KONFIDENSINTERVALL
+
+def konfidensintervall(df):
+    """
+    95%-CI för medel med normal-approximation
+    medel +- 1.96 *(std / sqrt(n))
+    """
+    # 1. ingredienser
+    medelvärde = df["systolic_bp"].mean()
+    standardavvikelse = df["systolic_bp"].std()
+    antal_mätningar = len(df["systolic_bp"])
+
+    standardfel = standardavvikelse / math.sqrt(antal_mätningar)
+
+    # 2. Räkna ut felmarginal (för 95% konfidensnivå använder vi kritiskt z-värde 1,96 eller 2)
+    z = 1.96
+    felmarginal = z * standardfel
+
+    # 3. bygg det färdiga intervallet (nedre och övre gräns)
+    nedre_gräns = medelvärde - felmarginal
+    övre_gräns = medelvärde + felmarginal 
+
+    # Resultat: Vi är 95% säkra på att det sanna medelvärde ligger mellan dessa värden
+    print(f"95% Konfidensintervall: Mellan {nedre_gräns:.1f} och {övre_gräns:.1f}")
+
+    return nedre_gräns, övre_gräns
