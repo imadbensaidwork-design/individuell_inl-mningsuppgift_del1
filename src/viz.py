@@ -33,7 +33,9 @@ def box(df):
 
     ax.set_title("Vikt per kön")
     ax.set_xlabel("Kön")
-    ax.set_ylabel("Vikt") # antal individere
+    ax.set_xticks([1, 2])
+    ax.set_xticklabels(["M", "F"])
+    ax.set_ylabel("Vikt (kg)")
     ax.grid(True, axis="y", alpha=0.3)
     plt.tight_layout()
     return fig

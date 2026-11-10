@@ -41,7 +41,7 @@ def simulation(df):
     # 42 = startvärde som gör att vi får samma slumpmässiga resultat vid varje körning
     # slumpgenerator = namnet vi ger generatorn så att vi kan använda den senare i koden
 
-    antal_personer = 800 # Anger antalet personer vi ska simulera
+    antal_personer = 1000 # Anger antalet personer vi ska simulera
 
     simulerade_utfall = slumpgenerator.binomial( # Simulerar slumpmässiga sjukdomsutfall
         n=1, # Anger ett försök per person (personen blir antingen sjuk eller frisk)
@@ -83,7 +83,7 @@ def konfidensintervall(df):
     nedre_gräns = medelvärde - felmarginal
     övre_gräns = medelvärde + felmarginal 
 
-    # Resultat: Vi är 95% säkra på att det sanna medelvärde ligger mellan dessa värden
+    # 4. Resultat: Vi är 95% säkra på att det sanna medelvärde ligger mellan dessa värden
     print(f"95% Konfidensintervall: Mellan {nedre_gräns:.1f} och {övre_gräns:.1f}")
 
     return nedre_gräns, övre_gräns
