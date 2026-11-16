@@ -63,7 +63,8 @@ def simulation(df):
 
 # FUNKTION 3: KONFIDENSINTERVALL NORMALAPPROXIMATION
 
-def konfidensintervall(df):
+def normal_approximation_ci(df):
+    np.random.seed(42)   
     """
     95%-CI för medel med normal-approximation
     medel +- 1.96 *(std / sqrt(n))
@@ -86,11 +87,12 @@ def konfidensintervall(df):
     # 4. Resultat: Vi är 95% säkra på att det sanna medelvärde ligger mellan dessa värden
     # print(f"95% Konfidensintervall: Mellan {nedre_gräns:.1f} och {övre_gräns:.1f}")
 
-    return nedre_gräns, övre_gräns
+    return f"Med normalapproximationen får vi konfidensintervallet {nedre_gräns:.4f} - {övre_gräns:.4f}"
 
 # FUNKTION 4: KONFIDENSINTERVALL BOOTSTRAP
 
-def bootstrap(df, B=5000, confidence=0.95):
+def bootstrap_ci(df, B=5000, confidence=0.95):
+    np.random.seed(42)   
     # 1. Konvertera kolumnen till en ren NumPy-array och räkna stickprovsstorleken (n = 800)
     urval = np.asarray(df["systolic_bp"])
     n = len(urval)
@@ -111,4 +113,4 @@ def bootstrap(df, B=5000, confidence=0.95):
     ci = np.percentile(boot_means, [2.5, 97.5])
     
     # Returnera det färdiga intervallet
-    return ci
+    return f"Med bootstrapmetoden får vi konfidensintervallet {ci[0]:.4f} - {ci[1]:4f}"

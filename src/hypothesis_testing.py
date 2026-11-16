@@ -46,6 +46,6 @@ def hypothesis(df):
     # p >= 0.05 = inte statistiskt signifikant
     t_stat, p_val = stats.ttest_ind(smoker_yes, smoker_no, equal_var=False, alternative="greater")
 
-    return f"Standard t-test: t = {t_stat:.3f}, p = {p_val:.4f}"
+    return f"Welch t-test: t = {t_stat:.3f}, p = {p_val:.4f}"
 
 
