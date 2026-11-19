@@ -136,8 +136,7 @@ class Graphs:
         intercept_hat = float(beta_hat_vector[0]) # Hämtar det första värdet (index 0), alltså interceptet (Y när X = 0)
         slope_hat = float(beta_hat_vector[1]) # Hämtar det andra värdet (index 1), alltså lutningen (k)
 
-        print(f" Beräknat Y-värde när X = 0: {intercept_hat:.2f}") # modellens intercept: beräknat Y-värde när X = 0)
-        print(f" Skattning av hur mycket systoliskt blodtryck (Y) ökar med åldern i år (X): {slope_hat:.2f}")     # modellens lutning: hur mycket blodtrycket (Y) ökar med åldern(X)
+        print(f" Skattning av hur mycket systoliskt blodtryck (Y) ökar med åldern i år (X): {slope_hat:.2f} mmHg") # modellens lutning: hur mycket blodtrycket (Y) ökar med åldern(X)
 
         # 2. ta fram figur
         plt.figure(figsize=(8, 6))
