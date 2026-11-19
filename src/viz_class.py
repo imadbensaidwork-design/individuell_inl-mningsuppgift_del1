@@ -109,3 +109,51 @@ class Graphs:
         ax.grid(True, axis="y")
         plt.tight_layout()  
         return fig
+
+    def linear_regression(self):
+        """
+        Denna metod tar fram ett spridningsdiagram samt en regressionslinje
+        som visar sambandet mellan ålder och systoliskt blodtryck
+        """
+        np.random.seed(42)
+        # 1. beräkna intercept och lutning
+        X = self.df["age"].values # hämtar värdena från "age" och omvandlar dem till en np-array
+        Y = self.df["systolic_bp"].values  # hämtar värdena från "systolic_bp" och omvandlar dem till en np-array
+
+        # 1.1 bygg upp designmatrisen (design_matrix): [1, x]
+        ones_column = np.ones_like(X) # skapar en np array fylld med ettor, med samma form och storlek som X
+        design_matrix = np.column_stack([ones_column, X]) # np.column_stack() staplar ihop flera arrayer som kolumner bredvid varandra
+        transposed_design = design_matrix.T # transponerar design_matrix: rader blir kolumner
+        # [1, 2],       [1, 1, 1]
+        # [1, 5],  -->  [2, 5, 8]
+        # [1, 8]]
+        gram_matrix = transposed_design @ design_matrix # multiplicerar transponerade designmatrisen med originalmatrisen (X.T @ X)
+        # [1, 1, 1]     [1, 2]     [3, 15]
+        # [2, 5, 8]   @ [1, 5]  =  [15, 93]
+        #               [1, 8]
+        design_response = transposed_design @ Y # multiplicerar transponerade designmatrisen (X.T) med Y (systolic_bp)
+        beta_hat_vector = np.linalg.inv(gram_matrix) @ design_response # centrala beräkningen där vi faktiskt räknar fram regressionsmodellens koefficienter (intercept och lutning)
+        intercept_hat = float(beta_hat_vector[0]) # Hämtar det första värdet (index 0), alltså interceptet (Y när X = 0)
+        slope_hat = float(beta_hat_vector[1]) # Hämtar det andra värdet (index 1), alltså lutningen (k)
+
+        print(f" Beräknat Y-värde när X = 0: {intercept_hat:.2f}") # modellens intercept: beräknat Y-värde när X = 0)
+        print(f" Skattning av hur mycket systoliskt blodtryck (Y) ökar med åldern i år (X): {slope_hat:.2f}")     # modellens lutning: hur mycket blodtrycket (Y) ökar med åldern(X)
+
+        # 2. ta fram figur
+        plt.figure(figsize=(8, 6))
+        plt.scatter(X, Y, alpha=0.7, label="Data")
+
+        grid_X = np.linspace(18, 90, 200) # skapar 200 nya, jämnt fördelade åldersvärden för att rita en jämn regressionslinje
+        # 18 och 90 är datasetets min- och maxåldrar
+                                          
+        grid_Y_manual = intercept_hat + slope_hat * grid_X
+        # Räknar ut vilket Y-värde regressionslinjen har vid vart och ett av X-värdena
+        # Använder interceptet och lutningen som vi räknade fram tidigare
+    
+        # 2.1 ta fram linje
+        plt.plot(grid_X, grid_Y_manual, color="red", linewidth=2, label="Regressionslinje")
+        plt.xlabel("Ålder (X)")
+        plt.ylabel("Systoliskt blodtryck (Y)")
+        plt.title("Samband mellan ålder och systoliskt blodtryck (linjär regression)")
+        plt.legend()
+        plt.show()
