@@ -116,10 +116,10 @@ def bootstrap_ci(df, B=5000, confidence=0.95):
     # Returnera det färdiga intervallet
     return f"Med bootstrapmetoden får vi konfidensintervallet {ci[0]:.4f} - {ci[1]:4f}"
 
-# FUNKTION 5: KORRELATIONSANALYS (ÅLDER VS SYSTOLISKT BLODTRYCK)
+# FUNKTION 5: KORRELATIONSANALYS (ÅLDER & SYSTOLISKT BLODTRYCK)
 def correlation(df):
     X = df["age"].values # hämtar värdena från "age" och omvandlar dem till en np-array
     Y = df["systolic_bp"].values  # hämtar värdena från "systolic_bp" och omvandlar dem till en np-array
     r = np.corrcoef(X, Y) # beräknas korrelationsmatris
-    return (f"Korrelationen mellan ålder och systoliskt blodtryck är: r = {r[0, 1]:.3f}") # returnerar korrelationen mellan X och Y
+    return (f"Korrelationen mellan ålder och systoliskt blodtryck är: r = {r[0, 1]:.1f}") # returnerar korrelationen mellan X och Y
     

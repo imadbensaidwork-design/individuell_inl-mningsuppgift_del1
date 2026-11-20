@@ -10,16 +10,6 @@ class Graphs:
     baserade på vårt hälsodata, anpassade för det aktuella datasetet.
     DataFrame skickas in när ett objekt av klassen skapas och sparas
     för att kunna användas av klassens olika metoder.
-
-    Metoder:
-    - hist(): Skapar ett histogram som visar frekvensfördelningen av
-      systoliskt blodtryck (systolic_bp).
-
-    - box(): Skapar ett låddiagram som jämför viktfördelningen
-      mellan män och kvinnor.
-
-    - bar(): Skapar ett stapeldiagram som visar andelen rökare
-      bland män respektive kvinnor.
     """
 
     def __init__(self, df):
@@ -156,3 +146,35 @@ class Graphs:
         plt.title("Samband mellan ålder och systoliskt blodtryck (linjär regression)")
         plt.legend()
         plt.show()
+
+    def correlation_matrix(self):
+        # Source - https://stackoverflow.com/a/29432741
+        # Posted by jrjc, modified by community. See post 'Timeline' for change history
+        # Retrieved 2026-11-20, License - CC BY-SA 4.0
+
+        """
+        Denna metod tar fram en korrelationsmatris som visar sambandet mellan
+        datasetets numeriska variabler: ålder, längd, vikt, systoliskt blodtryck 
+        och kolesterol.
+        """
+
+        korrelationsdata = self.df[["age", "height", "weight", "systolic_bp", "cholesterol"]]
+
+        figur = plt.figure(figsize=(8,6))
+        plt.matshow(korrelationsdata.corr(), fignum=figur.number) # skapar korrelationsmatrisen
+        korrelationsmatris = korrelationsdata.corr() # hämtar korrelationsvärdena från korrelationsdata.corr()
+
+        for i in range(korrelationsmatris.shape[0]): # Skriver ut korrelationsvärdet i varje ruta
+            for j in range(korrelationsmatris.shape[1]):
+                plt.text(j, i, f"{korrelationsmatris.iloc[i, j]:.2f}",
+                        ha="center", va="center", color="black")
+
+        plt.xticks(range(korrelationsdata.shape[1]), korrelationsdata.columns, fontsize=14, rotation=45) # namnger x-axeln
+        plt.yticks(range(korrelationsdata.shape[1]), korrelationsdata.columns, fontsize=14) # namnger y-axeln
+
+        cb = plt.colorbar()
+        cb.ax.tick_params(labelsize=14)
+        plt.title("Korrelationsmatris", fontsize=16);
+        plt.show();
+
+
