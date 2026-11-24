@@ -5,16 +5,21 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
+import scipy.stats as stats
 
 # FUNKTION 1: BESKRIVANDE HÄLSOANALYS AV NUMERISKA KOLUMNER
 
 def summary_statistics(df): # funktion tar emot DataFrame
-    """Beräknar statistiska mått för utvalda numeriska kolumner"""
+    """   
+    Beräknar beskrivande statistiska mått för utvalda numeriska kolumner
+    i datasetet.
 
+    Funktionen sammanställer medelvärde, median, minimum och maximum
+    för ålder, vikt, längd, systoliskt blodtryck och kolesterol.
+    Resultaten avrundas till ett lämpligt antal decimaler för varje kolumn.
+    """
     columns = ["age", "weight", "height", "systolic_bp", "cholesterol"] # anger vilka kolumner som ska undersökas
-
     summary = df[columns].describe() # väljer kolumnerna och beräknar beskrivande statistik
-
     summary = summary.loc[["mean", "50%", "min", "max"]]  # väljer ut medelvärde, median, minimum och maximum
                                                           # .loc som väljer ut specifika rader i DataFrame:en
 
@@ -28,9 +33,19 @@ def summary_statistics(df): # funktion tar emot DataFrame
 
 
 # FUNKTION 2: SIMULERING AV SJUKDOM
-
 def simulation(df):
+    """ 
+    Simulerar sjukdomsutfall för 1000 slumpmässiga personer baserat
+    på sjukdomsförekomsten i originaldatasetet.
 
+    Funktionen beräknar först antalet och andelen personer med sjukdomen
+    i originaldatasetet. Därefter används NumPy för att simulera
+    sjukdomsutfall där sannolikheten att bli sjuk motsvarar den
+    observerade andelen i datasetet.
+
+    Slutligen jämförs antalet och andelen sjuka i simuleringen
+    med originaldatasetet.
+    """
     # 1. Beräkna andelen personer i datasetet som har sjukdomen
 
         # # antal_sjuka = int(df["disease"].sum()) # Räknar antalet sjuka (sum() räknar alla ettor)
@@ -65,14 +80,16 @@ def simulation(df):
 
     return
 
-
 # FUNKTION 3: KONFIDENSINTERVALL NORMALAPPROXIMATION
-
 def normal_approximation_ci(df):
     np.random.seed(42)   
     """
-    95%-CI för medel med normal-approximation
-    medel +- 1.96 *(std / sqrt(n))
+    Beräknar ett 95-procentigt konfidensintervall för medelvärdet
+    av det systoliska blodtrycket med hjälp av normalapproximation.
+
+    Funktionen beräknar medelvärde, standardavvikelse och standardfel.
+    Därefter används det kritiska z-värdet 1,96 för att beräkna
+    felmarginalen och konfidensintervallets nedre och övre gräns.
     """
     # 1. ingredienser
     medelvärde = df["systolic_bp"].mean()
@@ -94,10 +111,17 @@ def normal_approximation_ci(df):
 
     return f"Med normalapproximationen får vi konfidensintervallet {nedre_gräns:.4f} - {övre_gräns:.4f}"
 
-
 # FUNKTION 4: KONFIDENSINTERVALL BOOTSTRAP
-
 def bootstrap_ci(df, B=5000, confidence=0.95):
+    """
+    Beräknar ett konfidensintervall för medelvärdet av det systoliska
+    blodtrycket med hjälp av bootstrapmetoden.
+
+    Funktionen drar upprepade stickprov med återläggning från
+    originaldatasetet och beräknar medelvärdet för varje stickprov.
+    De simulerade medelvärdena används sedan för att beräkna
+    konfidensintervallet med hjälp av percentilmetoden.
+    """
     np.random.seed(42)   
     # 1. Konvertera kolumnen till en ren NumPy-array och räkna stickprovsstorleken (n = 800)
     urval = np.asarray(df["systolic_bp"])
@@ -121,22 +145,103 @@ def bootstrap_ci(df, B=5000, confidence=0.95):
     # Returnera det färdiga intervallet
     return f"Med bootstrapmetoden får vi konfidensintervallet {ci[0]:.4f} - {ci[1]:4f}"
 
-# FUNKTION 5: KORRELATIONSANALYS (ÅLDER & SYSTOLISKT BLODTRYCK)
+# FUNKTION 5: HYPOTESTPRÖVNING: ”Rökare har högre medel-blodtryck än icke-rökare”
+def hypothesis(df):
+    """
+    Undersöker om rökare har ett högre genomsnittligt systoliskt
+    blodtryck än icke-rökare genom att utföra ett ensidigt Welch t-test.
+
+    Funktionen delar upp datasetet i två oberoende grupper:
+    rökare och icke-rökare. Därefter jämförs gruppernas medelvärden
+    för systoliskt blodtryck med hjälp av Welch t-test, som inte
+    förutsätter att grupperna har lika varians.
+
+    Hypotesprövningen använder en signifikansriktning där alternativ-
+    hypotesen är att rökare har högre genomsnittligt systoliskt
+    blodtryck än icke-rökare.
+    """
+    # 1. ta reda på gruppernas skillnad i medelvärde
+    smoker_yes = df.loc[df["smoker"] == "Yes", "systolic_bp"]
+    smoker_no = df.loc[df["smoker"] == "No", "systolic_bp"]
+
+    smoker_yes.mean() # 149.524882629108 # rökare
+    smoker_no.mean() # 149.05298126064736 # icke-rökare
+
+    # 2. testa hypotesen: "rökare har högre medel-blodtryck än icke-rökare"
+
+    # 2.1 welch t-test (jämför två oberoende grupper utan krav på lika varians)
+
+    # stats.ttest_ind = utför ett t-test för två oberoende grupper
+    # smoker_yes och smoker_no = grupperna som jämförs (rökare och icke-rökare)
+    # equal_var=False = tillåter olika varians (spridning) i grupperna
+
+    # t_stat = t-statistiken som visar skillnaden mellan gruppernas medelvärden i förhållande till osäkerheten
+
+        # Osäkerheten i skillnaden mellan gruppernas medelvärden påverkas av:
+        # 1.  Spridningen: Större variation i blodtrycket ger större osäkerhet
+        # 1.1 Mindre variation i blodtrycket ger mindre osäkerhet
+        # 2.  Antalet personer: Fler personer ger mindre osäkerhet
+        # 2.1 Färre personer ger större osäkerhet
+
+    # Ett högt absolut t-värde innebär att skillnaden är stor i förhållande till osäkerheten
+    # Ett lågt absolut t-värde innebär motsatsen
+    # Det finns ingen exakt gräns för vad som räknas som ett högt eller lågt t-värde
+    
+    # Grov tumregel:
+    # t < 1 = lågt t-värde
+    # t ≈ 2 = börjar ofta ge statistiskt signifikant resultat
+    # t > 2 = kan ge statistiskt signifikant resultat
+    # t > 3 = relativt högt t-värde
+
+    # p_val = p-värdet, används för att bedöma om resultatet är statistiskt signifikant
+    # Lågt p-värde: Resultatet vore ovanligt om nollhypotesen stämde, vilket ger stöd för att förkasta den
+    # Högt p-värde: Resultatet är inte särskilt ovanligt om nollhypotesen stämde, vilket innebär att vi saknar tillräckligt stöd för att förkasta den
+
+    # En vanlig signifikansnivå är 0.05
+    # p < 0.05 = statistiskt signifikant
+    # p >= 0.05 = inte statistiskt signifikant
+    t_stat, p_val = stats.ttest_ind(smoker_yes, smoker_no, equal_var=False, alternative="greater")
+
+    return f"Welch t-test: t = {t_stat:.3f}, p = {p_val:.4f}"
+
+
+# FUNKTION 6: KORRELATIONSANALYS (ÅLDER & SYSTOLISKT BLODTRYCK)
+# källa: https://realpython.com/numpy-scipy-pandas-correlation-python/#example-numpy-correlation-calculation
 def correlation(df):
+    """
+    Beräknar Pearsons korrelationskoefficient mellan ålder
+    och systoliskt blodtryck.
+
+    Funktionen hämtar värdena från de två kolumnerna och använder
+    NumPy för att beräkna korrelationen. Resultatet visar styrkan
+    och riktningen på det linjära sambandet mellan variablerna.
+    """
     X = df["age"].values # hämtar värdena från "age" och omvandlar dem till en np-array
     Y = df["systolic_bp"].values  # hämtar värdena från "systolic_bp" och omvandlar dem till en np-array
     r = np.corrcoef(X, Y) # beräknas korrelationsmatris
     return (f"Korrelationen mellan ålder och systoliskt blodtryck är: r = {r[0, 1]:.1f}") # returnerar korrelationen mellan X och Y
 
-
-# FUNKTION 6: MULTIPEL REGRESSIONSANALYS
-
+# FUNKTION 7: MULTIPEL REGRESSIONSANALYS
 # Källa: https://www.youtube.com/watch?v=KYNuzfn5Fx0
 # Source - https://stackoverflow.com/a/40902719
 # Posted by piRSquared
 # Retrieved 2026-11-20, License - CC BY-SA 3.0
 
 def multiple_regression(df):
+    """
+    Genomför en multipel linjär regressionsanalys för att undersöka
+    sambandet mellan flera förklarande variabler och systoliskt blodtryck.
+
+    Funktionen omkodar först de kategoriska variablerna 'smoker'
+    och 'sex' till numeriska värden. Därefter används ålder, längd,
+    vikt, kolesterol, sjukdom, rökning och kön som oberoende variabler.
+    Systoliskt blodtryck används som beroende variabel.
+
+    Med hjälp av statsmodels och minsta kvadratmetoden (OLS) anpassas
+    en multipel linjär regressionsmodell. Funktionen sammanställer
+    modellens resultat, bland annat regressionskoefficienter,
+    p-värden och förklaringsgrad.
+    """
    
     # (Y) beroende variabel: systolic_bp
     # (X) oberoende variabler: age, weight, cholesterol, smoking, disease, sex

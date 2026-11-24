@@ -1,5 +1,3 @@
-# DENNA MODUL INNEHÅLLER EN KLASS (GRAPHS) MED METODER FÖR GRAFISK VISUALISERING
-
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -105,8 +103,12 @@ class Graphs:
 
     def linear_regression(self): # METOD 4: SPRIDNIGNSDIAGRAMM OCH REGRESSIONSLINJE
         """
-        Denna metod tar fram ett spridningsdiagram samt en regressionslinje
-        som visar sambandet mellan ålder och systoliskt blodtryck
+        Denna metod Beräknar en enkel linjär regression med hjälp av NumPy
+        och skapar ett spridningsdiagram med en regressionslinje
+        för sambandet mellan ålder och systoliskt blodtryck.
+
+        Regressionsmodellens intercept och lutning beräknas genom
+        matrismultiplikation och minsta kvadratmetoden (OLS).
         """
         np.random.seed(42)
         # 1. beräkna intercept och lutning
@@ -216,7 +218,6 @@ class Graphs:
         model.summary()
 
         # förbered figuren
-
         coef_df = pd.DataFrame(model.summary().tables[1].data) # hämtar koefficienttabellen från regressionen och gör om den till en Pandas-tabell
         coef_df.columns = coef_df.iloc[0]                 # tar första raden och gör den till kolumnnamn, till exempel coef, std err och P>|t|
         coef_df=coef_df.drop(0)                           # tar bort första raden eftersom den nu redan används som kolumnnamn
@@ -233,7 +234,7 @@ class Graphs:
         # skriv ut koefficienterna 
         variables = list(coef_df.index.values)            # hämtar alla variabelnamn från tabellen och sparar dem i en lista
         coef_df['variables'] = variables                  # lägger till en kolumn med variables (etiketter smoker, sex, osv..)
-        sns.set_context("poster")                         # Gör text och diagrammets detaljer större - ta ev. bort..
+        sns.set_context("notebook")                         # Gör text och diagrammets detaljer större - ta ev. bort..
 
         fig, ax = plt.subplots(figsize=(8, 6))           # ta fram figuren
 

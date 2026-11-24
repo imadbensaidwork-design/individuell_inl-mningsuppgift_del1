@@ -2,13 +2,11 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 from statsmodels.stats.power import TTestIndPower
-from statsmodels.stats.power import NormalIndPower  # beräknar power (teststyrka)
 from statsmodels.stats.proportion import proportion_effectsize  # beräknar effektstorlek mellan andelar
 from statsmodels.stats.proportion import proportions_ztest  # utför z-test för att jämföra andelar
 from statsmodels.stats.multitest import multipletests  # korrigerar p-värden vid flerfaldig testning
 
 # FUNKTION 1: STATISTISK POWER-SIMULERING
-
 #### FUNKTIONENS STRUKTUR ####
 # 1. BASELINE
 # 2. BERÄKNA EFFEKTSTORLEK (COHEN'S D)
@@ -16,7 +14,21 @@ from statsmodels.stats.multitest import multipletests  # korrigerar p-värden vi
 # 4. SIMULERA POWER GENOM ATT UPPREPA HYPOTESTESTET
    
 def simulation(df):
+    """
+    Beräknar teoretisk och simulerad statistisk power för att undersöka
+    hur ofta ett hypotesprövningstest upptäcker en skillnad i genomsnittligt
+    systoliskt blodtryck mellan rökare och icke-rökare.
 
+    Först beräknas gruppernas medelvärden, den observerade skillnaden
+    och effektstorleken (Cohen's d). Därefter beräknas den teoretiska
+    powern med hjälp av TTestIndPower().
+
+    Slutligen genomförs 5000 simuleringar där slumpmässiga blodtrycksvärden
+    genereras utifrån gruppernas medelvärden och standardavvikelser.
+    För varje simulering utförs Welch's t-test för att uppskatta den
+    simulerade powern.
+    
+    """
     # 1. BASELINE
     np.random.seed(42)                                  # Gör slumpresultaten reproducerbara
     Y = df.loc[df["smoker"] == "Yes", "systolic_bp"]    # Y = rökare
