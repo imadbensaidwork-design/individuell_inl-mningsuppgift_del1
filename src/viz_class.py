@@ -3,6 +3,9 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
 
 class Graphs:
     """
@@ -23,7 +26,7 @@ class Graphs:
         """
         fig, ax = plt.subplots(figsize=(8, 5))
         ax.hist(self.df["systolic_bp"], bins=25) # väljer kolumnen systolic_bp (blodtryck)
-        ax.set_title("Frekvensfördelning av blodtryck")
+        ax.set_title("1. Frekvensfördelning av blodtryck")
         ax.set_xlabel("Blodtryck")
         ax.set_ylabel("Antal") # antal individere
         ax.grid(True, axis="y") # lägger till rutnät längs Y-axeln (vågräta linjer)
@@ -46,7 +49,7 @@ class Graphs:
         medianprops=dict(color="red") # färgar medianlinjen röd
         )
 
-        ax.set_title("Vikt per kön")
+        ax.set_title("2. Vikt per kön")
         ax.set_xlabel("Kön")
         ax.set_xticks([1, 2])
         ax.set_xticklabels(["M", "F"])
@@ -93,14 +96,14 @@ class Graphs:
         # smoker_rate.values (y-axeln) hämtar själva värdena, alltså andelen rökare i procent för respektive kön
         # ax.bar använder kategorierna på X-axeln och procentvärdena som stapelhöjd på Y-axeln
         ax.bar(smoker_rate.index, smoker_rate.values)
-        ax.set_title("Andel rökare per kön")
+        ax.set_title("3. Andel rökare per kön")
         ax.set_xlabel("Kön") 
         ax.set_ylabel("Rökare (%)")
         ax.grid(True, axis="y")
         plt.tight_layout()  
         return fig
 
-    def linear_regression(self):
+    def linear_regression(self): # METOD 4: SPRIDNIGNSDIAGRAMM OCH REGRESSIONSLINJE
         """
         Denna metod tar fram ett spridningsdiagram samt en regressionslinje
         som visar sambandet mellan ålder och systoliskt blodtryck
@@ -147,11 +150,8 @@ class Graphs:
         plt.legend()
         plt.show()
 
-    def correlation_matrix(self):
-        # Source - https://stackoverflow.com/a/29432741
-        # Posted by jrjc, modified by community. See post 'Timeline' for change history
-        # Retrieved 2026-11-20, License - CC BY-SA 4.0
-
+    def correlation_matrix(self): # METOD 5: KORRELATIONSMATRIS
+        # Källa: https://stackoverflow.com/a/29432741
         """
         Denna metod tar fram en korrelationsmatris som visar sambandet mellan
         datasetets numeriska variabler: ålder, längd, vikt, systoliskt blodtryck 
@@ -178,3 +178,99 @@ class Graphs:
         plt.show();
 
 
+    def coefplot(self): # METOD 6: MULTIPEL REGRESSIONSANALYS OCH KOEFFICIENTDIAGRAM
+        # källa: https://medium.com/analytics-vidhya/create-your-own-coefficient-plot-function-in-python-aadb9fe27a77
+        """
+        Denna metod utför en multipel regressionsanalys och presenterar sedan resultaten i en
+        tabell och i ett kompletterande koefficientdiagram. Den beroende variabeln i analysen 
+        är systoliskt blodtryck. De oberoende variablerna är ålder, längd, vikt, kolesterol,
+        sjukdom, rökare och kön.
+            
+        """
+        c_smoker = self.df["smoker"].map({"Yes": 1, "No": 0}) # omvandlar (convert) smoker från Yes/No till 1/0
+        c_sex = self.df["sex"].map({"M": 1, "F": 0})
+        self.df_drop = self.df.drop(columns=["id", "smoker","sex"])      # tar bort originalkolumnen
+        self.df_assign = self.df_drop.assign(smoker=c_smoker, sex=c_sex) # lägger till den omkodade kolumnen
+        self.df_processed = self.df_assign
+
+        # plockar ut variablerna til X och Y
+        X = self.df_processed[["age", "height", "weight", "cholesterol", "disease", "smoker", "sex"]] # oberoende variabler
+        Y = self.df_processed["systolic_bp"] # beroende variabel
+
+        # lägger till en konstantkolumn (med värdet 1) i X
+        # konstanten gör att modellen kan beräkna ett grundvärde (intercept)
+        # som blir modellens konstant = fasta stardvärde: Blodtryck = 99.9181
+        X = sm.add_constant(X)
+
+        # sm.OLS() = Ordinary Least Squares (minsta kvadratmetoden)
+        # Skapar en linjär regressionsmodell som beräknar vilka koefficienter som bäst passar datan
+        # .fit() = genomför beräkningen och anpassar modellen till datan genom att hitta de bästa koefficienterna
+        model = sm.OLS(Y, X).fit()
+
+        # meräknar och skriver ut modellens MSE (Mean Squared Error)
+        # MSE visar det genomsnittliga kvadrerade felet mellan modellens
+        # förutsagda blodtrycksvärden och de faktiska blodtrycksvärdena
+        model.mse_resid
+
+        # tabellens resultat
+        model.summary()
+
+        # förbered figuren
+
+        coef_df = pd.DataFrame(model.summary().tables[1].data) # hämtar koefficienttabellen från regressionen och gör om den till en Pandas-tabell
+        coef_df.columns = coef_df.iloc[0]                 # tar första raden och gör den till kolumnnamn, till exempel coef, std err och P>|t|
+        coef_df=coef_df.drop(0)                           # tar bort första raden eftersom den nu redan används som kolumnnamn
+        coef_df = coef_df.set_index(coef_df.columns[0])   # gör första kolumnen till radnamn, så att variablerna (age, weight osv.) blir index
+        coef_df = coef_df.astype(float)                   # gör om tabellens värden till decimaltal så att Python kan räkna med dem
+        errors_lower = coef_df["coef"] - coef_df["[0.025"] # räknar ut hur långt det är från koefficienten till den nedre konfidensgränsen
+        errors_upper = coef_df["0.975]"] - coef_df["coef"]  # räknar ut hur långt det är från koefficienten till den övre konfidensgränsen
+        coef_df["errors_lower"] = errors_lower               # skapar en ny kolumn som lägger till de uträknade avstånden i DataFrame
+        coef_df["errors_upper"] = errors_upper               # skapar en ny kolumn som lägger till de uträknade avstånden i DataFrame
+        coef_df = coef_df.drop(["const"])                    # tar bort konstanten (interceptet) från tabellen eftersom vi bara vill visa våra
+                                                            # förklarande variabler i koefficientdiagrammet, inte modellens startvärde.
+        coef_df = coef_df.sort_values(by=["coef"])        # sorterar variablerna efter deras koefficientvärde, från lägsta till högsta, så att 
+                                                        # de visas i den ordningen i koefficientdiagrammet
+        # skriv ut koefficienterna 
+        variables = list(coef_df.index.values)            # hämtar alla variabelnamn från tabellen och sparar dem i en lista
+        coef_df['variables'] = variables                  # lägger till en kolumn med variables (etiketter smoker, sex, osv..)
+        sns.set_context("poster")                         # Gör text och diagrammets detaljer större - ta ev. bort..
+
+        fig, ax = plt.subplots(figsize=(8, 6))           # ta fram figuren
+
+        # error-stapel för 95% konfidensintervall (tas fram med pandas(plot))
+        coef_df.plot(
+            x="variables",       # Visar variabelnamnen på X-axeln
+            y="coef",             # Visar koefficientvärdena på Y-axeln
+            kind="bar",           # Väljer stapeldiagram
+            ax=ax,                # Placerar diagrammet på en befintlig Matplotlib-axel
+            color="none",         # Gör staplarna genomskinliga
+            fontsize=16,          # Bestämmer textstorleken
+            ecolor="steelblue",   # Gör felstaplarna blå
+            capsize=3,            # Tar bort små tvärstreck i felstaplarnas ändar
+            yerr=[coef_df["errors_lower"], coef_df["errors_upper"]], # Anger felmarginalerna som ska visas
+            legend=False          # döljer legend
+            )
+
+        # titlar och etiketter
+        plt.title("Koefficienter av hälsodata / 95% Konfidensintervall")
+        ax.set_ylabel("Koefficienter")
+        ax.set_xlabel("Variabler")
+
+        # koefficienter
+        ax.scatter(
+            x=np.arange(coef_df.shape[0]),  # skapar en position på X-axeln för varje variabel i tabellen
+            marker="o",                     # visar varje koefficient som en rund punkt
+            s=16,                           # bestämmer punktens storlek
+            y=coef_df["coef"],              # placerar punkterna utifrån variablernas koefficientvärden på Y-axeln
+            color="steelblue"               # Gör punkterna blå
+        )
+
+        ax.grid(axis="y", linestyle="--", alpha=0.4)
+        ax.set_axisbelow(True)
+
+        # ritar en referenslinje vid värdet 0 på Y-axeln
+        ax.axhline(y=0, linestyle='--', color='red', linewidth=1)
+
+        # skriver ut tabellen och grafen
+        print(model.summary())
+        plt.show();

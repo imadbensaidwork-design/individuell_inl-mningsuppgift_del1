@@ -1,9 +1,12 @@
 import pandas as pd
 import numpy as np
 import math
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+import statsmodels.api as sm
 
-
-# FUNKTION 1: BESKRIVANDE ANALYS AV NUMERISKA KOLUMNER
+# FUNKTION 1: BESKRIVANDE HÄLSOANALYS AV NUMERISKA KOLUMNER
 
 def summary_statistics(df): # funktion tar emot DataFrame
     """Beräknar statistiska mått för utvalda numeriska kolumner"""
@@ -22,6 +25,7 @@ def summary_statistics(df): # funktion tar emot DataFrame
     summary["cholesterol"] = summary["cholesterol"].round(2) # avrundar kolesterol till två decimaler
 
     return summary # returnerar sammanställningen som en DataFrame
+
 
 # FUNKTION 2: SIMULERING AV SJUKDOM
 
@@ -49,7 +53,6 @@ def simulation(df):
         p=andel_sjuka, # Anger sannolikheten att bli sjuk, baserat på originaldatasetet
         size=antal_personer # Anger hur många personer som ska simuleras
     )
-
     # 3. Jämför den simulerade andelen med den verkliga andelen i datasetet
 
     antal_simulerat_sjuka = simulerade_utfall.sum() # Räknar antalet sjuka i simuleringen
@@ -61,6 +64,7 @@ def simulation(df):
     print(f"Andel sjuka i simuleringen: {andel_simulerat_sjuka * 100:.2f}%")
 
     return
+
 
 # FUNKTION 3: KONFIDENSINTERVALL NORMALAPPROXIMATION
 
@@ -89,6 +93,7 @@ def normal_approximation_ci(df):
     # print(f"95% Konfidensintervall: Mellan {nedre_gräns:.1f} och {övre_gräns:.1f}")
 
     return f"Med normalapproximationen får vi konfidensintervallet {nedre_gräns:.4f} - {övre_gräns:.4f}"
+
 
 # FUNKTION 4: KONFIDENSINTERVALL BOOTSTRAP
 
@@ -122,4 +127,48 @@ def correlation(df):
     Y = df["systolic_bp"].values  # hämtar värdena från "systolic_bp" och omvandlar dem till en np-array
     r = np.corrcoef(X, Y) # beräknas korrelationsmatris
     return (f"Korrelationen mellan ålder och systoliskt blodtryck är: r = {r[0, 1]:.1f}") # returnerar korrelationen mellan X och Y
-    
+
+
+# FUNKTION 6: MULTIPEL REGRESSIONSANALYS
+
+# Källa: https://www.youtube.com/watch?v=KYNuzfn5Fx0
+# Source - https://stackoverflow.com/a/40902719
+# Posted by piRSquared
+# Retrieved 2026-11-20, License - CC BY-SA 3.0
+
+def multiple_regression(df):
+   
+    # (Y) beroende variabel: systolic_bp
+    # (X) oberoende variabler: age, weight, cholesterol, smoking, disease, sex
+
+    # samtliga oberoende variabler är numeriska/kontinuerliga utom sex (M/F) och smoking (Yes/No)
+    # dessa två behöver konverteras från strings till numeriska variabler (1/0)
+
+    c_smoker = df["smoker"].map({"Yes": 1, "No": 0})    # omvandlar (convert) smoker från Yes/No till 1/0
+    c_sex = df["sex"].map({"M": 1, "F": 0})             # omvandlar (convert) sex från M/F till 1/0
+    df_drop = df.drop(columns=["id", "smoker","sex"])   # tar bort originalkolumnerna
+    df_assign = df_drop.assign(smoker=c_smoker, sex=c_sex)  # lägger till den omkodade kolumnerna
+    df_processed = df_assign
+
+    # plockar ut variablerna till X (oberoende)
+    X = df_processed[["age", "height", "weight", "cholesterol", "disease", "smoker", "sex"]]
+
+    # plockar ut variablerna till Y (beroende)
+    Y = df_processed["systolic_bp"]
+
+    # lägger till en konstantkolumn (med värdet 1) i X
+    # konstanten gör att modellen kan beräkna ett grundvärde (intercept)
+    # som blir modellens konstant = fasta stardvärde: Blodtryck = 99.9181
+    # + (0.5235 * ålder)
+    # + (0.0533 * längd)
+    # + (0.1603 * vikt)
+    X_const = sm.add_constant(X)
+
+    # sm.OLS() = Ordinary Least Squares (minsta kvadratmetoden)
+    # Skapar en linjär regressionsmodell som beräknar vilka koefficienter som bäst passar datan
+    # .fit() = genomför beräkningen och anpassar modellen till datan genom att hitta de bästa koefficienterna
+    model = sm.OLS(Y, X_const).fit()
+
+    # beräknar modellens koefficienter och andra statistiska resultat
+    # visar bland annat koefficienter, p-värden och förklaringsgrad
+    return (model.summary())
